@@ -1,1 +1,1012 @@
-# QualityAI1
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Testing Framework — Trane Technologies</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --red: #C1272D;
+    --red-dark: #8B1A1E;
+    --red-glow: rgba(193,39,45,0.18);
+    --charcoal: #1A1A1A;
+    --offwhite: #F5F3EE;
+    --warm-gray: #9A9490;
+    --card-bg: #242220;
+    --border: rgba(193,39,45,0.25);
+    --text: #E8E4DC;
+    --dim: #7A756F;
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--charcoal);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE TEXTURE */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events:none; opacity:0.6;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    position: relative; z-index:10;
+    padding: 48px 60px 36px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; justify-content: space-between;
+    background: linear-gradient(135deg, rgba(193,39,45,0.07) 0%, transparent 60%);
+  }
+  .logo-block { display:flex; align-items:center; gap:16px; }
+  .trane-logo {
+    width:52px; height:52px; border-radius:8px;
+    background: var(--red);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:22px; color:#fff;
+    letter-spacing:-1px; flex-shrink:0;
+  }
+  .brand-text { }
+  .brand-text h1 { font-family:'Syne',sans-serif; font-size:13px; font-weight:600; letter-spacing:3px; text-transform:uppercase; color:var(--red); }
+  .brand-text p  { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); margin-top:3px; }
+  .header-title { text-align:right; }
+  .header-title h2 { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; line-height:1.1; }
+  .header-title span { color:var(--red); }
+  .header-title p { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); margin-top:6px; letter-spacing:1px; }
+
+  /* ---- NAV TABS ---- */
+  nav {
+    position: sticky; top:0; z-index:50;
+    background: rgba(26,26,26,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 60px;
+    display:flex; gap:0; overflow-x:auto;
+  }
+  nav button {
+    background:none; border:none; cursor:pointer;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--dim);
+    padding:16px 22px; border-bottom:2px solid transparent;
+    transition:all 0.2s; white-space:nowrap;
+  }
+  nav button:hover { color:var(--text); }
+  nav button.active { color:var(--red); border-bottom-color:var(--red); }
+
+  /* ---- MAIN ---- */
+  main { position:relative; z-index:5; }
+  .section { display:none; padding:60px; }
+  .section.active { display:block; }
+
+  /* ---- SECTION TITLE ---- */
+  .sec-title {
+    font-family:'Syne',sans-serif; font-size:38px; font-weight:800;
+    line-height:1.05; margin-bottom:10px;
+  }
+  .sec-title span { color:var(--red); }
+  .sec-sub {
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:var(--dim); letter-spacing:1px; margin-bottom:48px;
+  }
+
+  /* ---- FLOW DIAGRAM ---- */
+  .flow-wrap {
+    display:flex; flex-direction:column; align-items:center; gap:0;
+    max-width:900px; margin:0 auto;
+  }
+  .flow-stage {
+    width:100%; position:relative;
+  }
+  .flow-connector {
+    display:flex; flex-direction:column; align-items:center;
+    padding: 6px 0;
+  }
+  .flow-line { width:2px; height:30px; background:var(--red); opacity:0.5; }
+  .flow-arrow {
+    width:0; height:0;
+    border-left:8px solid transparent;
+    border-right:8px solid transparent;
+    border-top:10px solid var(--red);
+    opacity:0.7;
+  }
+
+  .stage-card {
+    border: 1px solid var(--border);
+    border-radius:12px;
+    background: var(--card-bg);
+    padding:28px 32px;
+    cursor:pointer;
+    transition: all 0.25s;
+    position:relative;
+    overflow:hidden;
+  }
+  .stage-card::before {
+    content:'';
+    position:absolute; left:0; top:0; bottom:0; width:4px;
+    background:var(--red); border-radius:4px 0 0 4px;
+    transform:scaleY(0); transition:transform 0.25s;
+    transform-origin:top;
+  }
+  .stage-card:hover { border-color:var(--red); background:#2A2826; transform:translateX(4px); }
+  .stage-card:hover::before { transform:scaleY(1); }
+  .stage-card.expanded { border-color:var(--red); background:#2A2826; }
+  .stage-card.expanded::before { transform:scaleY(1); }
+
+  .stage-header {
+    display:flex; align-items:center; gap:16px;
+  }
+  .stage-num {
+    width:38px; height:38px; border-radius:50%;
+    background:var(--red); display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:14px; flex-shrink:0;
+  }
+  .stage-info { flex:1; }
+  .stage-info h3 { font-family:'Syne',sans-serif; font-size:17px; font-weight:700; }
+  .stage-info p { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); margin-top:3px; }
+  .stage-badge {
+    font-family:'IBM Plex Mono',monospace; font-size:10px;
+    background:var(--red-glow); color:var(--red);
+    border:1px solid var(--border); border-radius:4px;
+    padding:4px 10px; letter-spacing:1px; text-transform:uppercase; flex-shrink:0;
+  }
+  .stage-toggle {
+    font-size:18px; color:var(--dim); transition:transform 0.3s; flex-shrink:0;
+  }
+  .stage-card.expanded .stage-toggle { transform:rotate(180deg); color:var(--red); }
+
+  .stage-detail {
+    display:none; margin-top:24px; padding-top:24px;
+    border-top:1px solid rgba(255,255,255,0.06);
+  }
+  .stage-card.expanded .stage-detail { display:block; }
+
+  .detail-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:20px;
+  }
+  .detail-block { }
+  .detail-block h4 {
+    font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px;
+    text-transform:uppercase; color:var(--red); margin-bottom:10px;
+  }
+  .detail-block ul { list-style:none; }
+  .detail-block ul li {
+    font-size:13px; color:var(--text); opacity:0.85;
+    padding:5px 0; border-bottom:1px solid rgba(255,255,255,0.04);
+    display:flex; align-items:flex-start; gap:8px;
+  }
+  .detail-block ul li::before { content:'→'; color:var(--red); flex-shrink:0; font-size:11px; margin-top:2px; }
+  .tool-chips { display:flex; flex-wrap:wrap; gap:8px; margin-top:4px; }
+  .chip {
+    font-family:'IBM Plex Mono',monospace; font-size:10px;
+    background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12);
+    border-radius:4px; padding:4px 10px; color:var(--text); letter-spacing:0.5px;
+  }
+  .chip.highlight { background:var(--red-glow); border-color:var(--border); color:var(--red); }
+
+  /* ---- WHY NOT COPILOT ---- */
+  .compare-grid {
+    display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:48px;
+  }
+  .compare-card {
+    border-radius:12px; padding:28px; border:1px solid;
+  }
+  .compare-card.no { border-color:rgba(200,50,50,0.3); background:rgba(200,50,50,0.05); }
+  .compare-card.yes { border-color:rgba(50,180,100,0.3); background:rgba(50,180,100,0.05); }
+  .compare-card h3 { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:6px; }
+  .compare-card.no h3 { color:#F88; }
+  .compare-card.yes h3 { color:#7CE; }
+  .compare-card .sub { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim); margin-bottom:18px; }
+  .compare-card ul { list-style:none; }
+  .compare-card ul li { font-size:13px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); display:flex; gap:10px; }
+  .compare-card.no ul li::before { content:'✗'; color:#F88; }
+  .compare-card.yes ul li::before { content:'✓'; color:#7CE; }
+
+  /* ---- TOOL STACK ---- */
+  .tools-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .tool-card {
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--card-bg); padding:24px;
+    transition:all 0.2s;
+  }
+  .tool-card:hover { border-color:var(--red); transform:translateY(-3px); }
+  .tool-icon {
+    width:44px; height:44px; border-radius:8px;
+    background:var(--red-glow); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; margin-bottom:16px;
+  }
+  .tool-card h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:4px; }
+  .tool-card .role { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--red); letter-spacing:1px; margin-bottom:12px; }
+  .tool-card p { font-size:13px; color:var(--warm-gray); line-height:1.6; }
+  .tool-card .use-when { margin-top:12px; font-size:12px; font-family:'IBM Plex Mono',monospace; color:var(--dim); }
+
+  /* ---- SETUP GUIDE ---- */
+  .setup-steps { counter-reset:step; display:flex; flex-direction:column; gap:20px; }
+  .setup-step {
+    border:1px solid var(--border); border-radius:12px;
+    background:var(--card-bg); padding:28px 32px;
+    display:flex; gap:24px; align-items:flex-start;
+    counter-increment:step;
+  }
+  .step-num {
+    width:42px; height:42px; border-radius:50%;
+    border:2px solid var(--red); color:var(--red);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Syne',sans-serif; font-weight:800; font-size:16px; flex-shrink:0;
+  }
+  .step-body { flex:1; }
+  .step-body h3 { font-family:'Syne',sans-serif; font-size:16px; font-weight:700; margin-bottom:8px; }
+  .step-body p { font-size:13px; color:var(--warm-gray); line-height:1.65; margin-bottom:12px; }
+  .code-block {
+    background:#111; border:1px solid rgba(255,255,255,0.08);
+    border-radius:6px; padding:14px 18px;
+    font-family:'IBM Plex Mono',monospace; font-size:12px;
+    color:#A8E6CF; line-height:1.7; overflow-x:auto;
+  }
+  .code-block .comment { color:var(--dim); }
+  .code-block .kw { color:#F8BBD9; }
+  .code-block .str { color:#FFF9C4; }
+
+  /* ---- ROI ---- */
+  .roi-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:48px; }
+  .roi-card {
+    border:1px solid var(--border); border-radius:10px;
+    background:var(--card-bg); padding:24px 20px; text-align:center;
+  }
+  .roi-num { font-family:'Syne',sans-serif; font-size:36px; font-weight:800; color:var(--red); }
+  .roi-label { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--dim); letter-spacing:1px; margin-top:6px; }
+
+  /* ---- FOOTER ---- */
+  footer {
+    padding:32px 60px;
+    border-top:1px solid var(--border);
+    display:flex; justify-content:space-between; align-items:center;
+    font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--dim);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--charcoal); }
+  ::-webkit-scrollbar-thumb { background:var(--red-dark); border-radius:3px; }
+
+  @media(max-width:768px){
+    header { padding:28px 24px; flex-direction:column; gap:20px; }
+    .header-title { text-align:left; }
+    nav { padding:0 24px; }
+    .section { padding:32px 24px; }
+    .detail-grid { grid-template-columns:1fr; }
+    .compare-grid { grid-template-columns:1fr; }
+    .tools-grid { grid-template-columns:1fr; }
+    .roi-grid { grid-template-columns:repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-block">
+    <div class="trane-logo">TT</div>
+    <div class="brand-text">
+      <h1>Trane Technologies</h1>
+      <p>// QUALITY ENGINEERING DIVISION</p>
+    </div>
+  </div>
+  <div class="header-title">
+    <h2>AI-Powered <span>Testing</span><br>Framework</h2>
+    <p>// END-TO-END GUIDELINE v1.0 — 2025</p>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="showTab('flow')">Flow Diagram</button>
+  <button onclick="showTab('why')">Why Not Copilot?</button>
+  <button onclick="showTab('tools')">Tool Stack</button>
+  <button onclick="showTab('setup')">Setup Guide</button>
+  <button onclick="showTab('roi')">ROI & Metrics</button>
+</nav>
+
+<main>
+
+<!-- ========== FLOW DIAGRAM ========== -->
+<section class="section active" id="flow">
+  <div class="sec-title">End-to-End <span>AI Testing</span> Flow</div>
+  <div class="sec-sub">// CLICK EACH STAGE TO EXPAND DETAILS — MANUAL & SELENIUM COVERED</div>
+
+  <div class="flow-wrap">
+
+    <!-- STAGE 1 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">1</div>
+          <div class="stage-info">
+            <h3>Requirements Ingestion & Analysis</h3>
+            <p>Feed business docs, user stories, BRDs into AI for automatic requirement parsing</p>
+          </div>
+          <span class="stage-badge">PLANNING</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>What Happens</h4>
+              <ul>
+                <li>Upload BRD, Jira stories, Confluence docs to AI</li>
+                <li>AI extracts testable acceptance criteria automatically</li>
+                <li>Gaps, ambiguities, and missing test conditions flagged</li>
+                <li>Risk-ranked test priority list generated</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>AI Tools Used</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Testim AI</span>
+                <span class="chip highlight">Claude API</span>
+                <span class="chip">Jira + GPT plugin</span>
+                <span class="chip">Confluence AI</span>
+              </div>
+              <h4 style="margin-top:16px;">Why This Matters</h4>
+              <ul>
+                <li>Zero manual reading of 200-page BRDs</li>
+                <li>Catch missing requirements before dev starts</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 2 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">2</div>
+          <div class="stage-info">
+            <h3>AI Test Case Generation</h3>
+            <p>Auto-generate detailed manual & automated test cases with steps, data, and expected results</p>
+          </div>
+          <span class="stage-badge">CORE AI</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>For Manual Testing</h4>
+              <ul>
+                <li>AI writes step-by-step test cases with preconditions</li>
+                <li>Positive, negative, boundary, edge cases generated</li>
+                <li>Test data suggestions with realistic Trane-domain values</li>
+                <li>Traceability matrix auto-linked to requirements</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>For Selenium / Automation</h4>
+              <ul>
+                <li>AI generates Selenium Java/Python scripts from UI spec</li>
+                <li>Page Object Model classes auto-scaffolded</li>
+                <li>TestNG / JUnit annotations added automatically</li>
+                <li>XPath and CSS selectors generated + validated</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Primary Tool</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Testsigma AI</span>
+                <span class="chip highlight">Applitools</span>
+                <span class="chip">Katalon AI</span>
+                <span class="chip">Diffblue Cover</span>
+              </div>
+            </div>
+            <div class="detail-block">
+              <h4>Prompt Strategy</h4>
+              <ul>
+                <li>"Generate BDD Gherkin scenarios for HVAC login flow"</li>
+                <li>"Write Selenium tests for this API contract: [paste]"</li>
+                <li>"Create negative test cases for this form validation"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 3 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">3</div>
+          <div class="stage-info">
+            <h3>Test Review & Enrichment</h3>
+            <p>AI peer-reviews generated tests, adds missing scenarios, and enriches test data</p>
+          </div>
+          <span class="stage-badge">QUALITY GATE</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>What AI Does</h4>
+              <ul>
+                <li>Duplicate test case detection and deduplication</li>
+                <li>Coverage gap analysis against requirements</li>
+                <li>Suggests data-driven variations automatically</li>
+                <li>Flags tests that are too broad or ambiguous</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Tools</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Claude / ChatGPT</span>
+                <span class="chip">Testim Review</span>
+                <span class="chip">Zephyr Scale</span>
+                <span class="chip">Qase AI</span>
+              </div>
+              <h4 style="margin-top:16px;">Output</h4>
+              <ul>
+                <li>Reviewed test suite ready for execution</li>
+                <li>Coverage heatmap of requirements vs tests</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 4 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">4</div>
+          <div class="stage-info">
+            <h3>Selenium Script Generation & Self-Healing</h3>
+            <p>AI writes automation scripts and auto-repairs broken locators when UI changes</p>
+          </div>
+          <span class="stage-badge">AUTOMATION</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>Script Generation</h4>
+              <ul>
+                <li>Paste UI wireframe or live URL → AI writes Selenium scripts</li>
+                <li>Framework: Java + TestNG + Maven (or Python + Pytest)</li>
+                <li>POM pattern with reusable component classes</li>
+                <li>CI/CD-ready with Jenkins / GitHub Actions hooks</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Self-Healing (Game Changer)</h4>
+              <ul>
+                <li>When UI changes, AI detects broken XPath/CSS selectors</li>
+                <li>Automatically finds the new correct locator</li>
+                <li>No manual script maintenance after deployments</li>
+                <li>Reduces flaky test failures by up to 70%</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Key Tools</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Testim (Self-healing)</span>
+                <span class="chip highlight">Healenium</span>
+                <span class="chip">Selenium 4</span>
+                <span class="chip">Appium AI</span>
+                <span class="chip">LambdaTest AI</span>
+              </div>
+            </div>
+            <div class="detail-block">
+              <h4>Sample AI Prompt</h4>
+              <ul>
+                <li>"Generate Selenium Page Object for Trane thermostat config page"</li>
+                <li>"Fix this broken XPath and explain why: [paste locator]"</li>
+                <li>"Convert these manual steps to Selenium Java code"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 5 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">5</div>
+          <div class="stage-info">
+            <h3>Intelligent Test Execution</h3>
+            <p>AI prioritizes which tests to run, parallel execution, smart retry logic</p>
+          </div>
+          <span class="stage-badge">EXECUTION</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>AI Execution Features</h4>
+              <ul>
+                <li>Risk-based test selection — run only impacted tests</li>
+                <li>Parallel execution across browsers and environments</li>
+                <li>Smart retry: AI distinguishes flaky vs real failures</li>
+                <li>Predictive test scheduling based on sprint changes</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Manual Testing Support</h4>
+              <ul>
+                <li>AI assistant answers "what do I test next?" questions</li>
+                <li>Context-aware hints during exploratory testing</li>
+                <li>Session-based testing AI co-pilot</li>
+                <li>Real-time defect likelihood scoring</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Tools</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Mabl</span>
+                <span class="chip highlight">Testim Cloud</span>
+                <span class="chip">BrowserStack AI</span>
+                <span class="chip">Sauce Labs AI</span>
+                <span class="chip">Jenkins</span>
+              </div>
+            </div>
+            <div class="detail-block">
+              <h4>Integration Points</h4>
+              <ul>
+                <li>Slack/Teams alerts for critical failures</li>
+                <li>Auto-create Jira bugs from AI failure analysis</li>
+                <li>Live dashboard for QA leads and stakeholders</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 6 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">6</div>
+          <div class="stage-info">
+            <h3>AI Defect Analysis & RCA</h3>
+            <p>Automatic root cause analysis, duplicate bug detection, and severity prediction</p>
+          </div>
+          <span class="stage-badge">DEFECT MGMT</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>AI Defect Features</h4>
+              <ul>
+                <li>Auto-cluster similar failures to one root cause</li>
+                <li>AI-written defect reports with steps to reproduce</li>
+                <li>Predict defect severity: Critical / High / Medium / Low</li>
+                <li>Suggest which developer should own the fix</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Log Analysis</h4>
+              <ul>
+                <li>Paste stack trace → AI explains plain-English cause</li>
+                <li>Network log AI analysis for API test failures</li>
+                <li>Historical defect pattern recognition</li>
+                <li>Regression risk flagging for each sprint</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Tools</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Applitools Root Cause</span>
+                <span class="chip highlight">Claude / GPT</span>
+                <span class="chip">Jira AI</span>
+                <span class="chip">DataDog AI</span>
+              </div>
+            </div>
+            <div class="detail-block">
+              <h4>Prompt for Log Analysis</h4>
+              <ul>
+                <li>"Analyze this exception and give me root cause + fix"</li>
+                <li>"Is this bug a regression from last sprint? [paste]"</li>
+                <li>"Write a Jira defect report for this test failure"</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="flow-connector"><div class="flow-line"></div><div class="flow-arrow"></div></div>
+
+    <!-- STAGE 7 -->
+    <div class="flow-stage">
+      <div class="stage-card" onclick="toggleStage(this)">
+        <div class="stage-header">
+          <div class="stage-num">7</div>
+          <div class="stage-info">
+            <h3>Reporting, Coverage & Continuous Learning</h3>
+            <p>AI-generated QA reports, coverage analytics, and model improvement loop</p>
+          </div>
+          <span class="stage-badge">INSIGHTS</span>
+          <div class="stage-toggle">▼</div>
+        </div>
+        <div class="stage-detail">
+          <div class="detail-grid">
+            <div class="detail-block">
+              <h4>AI Reporting</h4>
+              <ul>
+                <li>Executive-level QA summary generated in seconds</li>
+                <li>Test coverage heatmap vs requirements</li>
+                <li>Trend analysis: quality improving or degrading?</li>
+                <li>Sprint-over-sprint defect velocity charts</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Continuous Learning</h4>
+              <ul>
+                <li>AI learns which test cases found the most bugs</li>
+                <li>Model improves test generation quality over time</li>
+                <li>Trane-specific domain knowledge is accumulated</li>
+                <li>New team members onboard faster via AI knowledge base</li>
+              </ul>
+            </div>
+            <div class="detail-block">
+              <h4>Tools</h4>
+              <div class="tool-chips">
+                <span class="chip highlight">Allure Report + AI</span>
+                <span class="chip">Power BI + AI</span>
+                <span class="chip">Testsigma Analytics</span>
+                <span class="chip">Xray AI</span>
+              </div>
+            </div>
+            <div class="detail-block">
+              <h4>Key Outputs</h4>
+              <ul>
+                <li>Release Go/No-Go recommendation from AI</li>
+                <li>Next sprint test strategy suggested by AI</li>
+                <li>Automated compliance reports (ISO, SOX if needed)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /flow-wrap -->
+</section>
+
+<!-- ========== WHY NOT COPILOT ========== -->
+<section class="section" id="why">
+  <div class="sec-title">Why <span>Not Just</span> Copilot?</div>
+  <div class="sec-sub">// HONEST COMPARISON — COPILOT VS PURPOSE-BUILT TESTING AI</div>
+
+  <div class="compare-grid">
+    <div class="compare-card no">
+      <h3>GitHub Copilot</h3>
+      <p class="sub">// WHAT IT'S MISSING FOR QA TEAMS</p>
+      <ul>
+        <li>General-purpose code assistant — not QA-specialized</li>
+        <li>No test case management or traceability</li>
+        <li>Cannot read BRDs or Jira stories to generate tests</li>
+        <li>No self-healing for broken Selenium locators</li>
+        <li>No test execution or CI/CD integration built-in</li>
+        <li>No defect analysis or root cause detection</li>
+        <li>No coverage reporting or test gap analysis</li>
+        <li>No domain-specific HVAC/Trane product knowledge</li>
+        <li>Writes code suggestions — you still do everything else</li>
+      </ul>
+    </div>
+    <div class="compare-card yes">
+      <h3>Purpose-Built Testing AI Stack</h3>
+      <p class="sub">// WHAT YOUR QA TEAM ACTUALLY NEEDS</p>
+      <ul>
+        <li>QA-native AI that understands testing workflows end to end</li>
+        <li>Integrated test case management with Jira / Zephyr sync</li>
+        <li>Reads requirements and auto-generates full test suites</li>
+        <li>Self-healing Selenium scripts that survive UI changes</li>
+        <li>One-click CI/CD: Jenkins, GitHub Actions, Azure DevOps</li>
+        <li>AI-powered root cause analysis and defect clustering</li>
+        <li>Coverage heatmaps, gap analysis, and release readiness</li>
+        <li>Train on your Trane-specific data and prior test history</li>
+        <li>Works for both manual testers and automation engineers</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="sec-title" style="font-size:24px; margin-bottom:12px;">The <span>Strategic Position</span></div>
+  <p style="color:var(--warm-gray); font-size:14px; line-height:1.8; max-width:700px;">
+    Copilot is a <strong style="color:var(--text)">code completion tool</strong> that helps developers write faster. 
+    Your QA team needs an <strong style="color:var(--red)">AI testing co-pilot</strong> — a system that owns 
+    the entire testing lifecycle: from reading requirements to generating, executing, analyzing, and reporting tests.
+    <br><br>
+    <strong style="color:var(--text)">Recommendation:</strong> Use Copilot for dev teams if they already have it licensed. 
+    Separately, deploy <strong style="color:var(--red)">Testsigma, Testim, or Mabl</strong> for the QA team — these 
+    are purpose-built and will transform your testing throughput within 30 days.
+  </p>
+</section>
+
+<!-- ========== TOOL STACK ========== -->
+<section class="section" id="tools">
+  <div class="sec-title">Recommended <span>Tool Stack</span></div>
+  <div class="sec-sub">// ALL TOOLS EVALUATED FOR TRANE TECHNOLOGIES' ENVIRONMENT</div>
+
+  <div class="tools-grid">
+    <div class="tool-card">
+      <div class="tool-icon">🧠</div>
+      <h3>Testsigma</h3>
+      <div class="role">// CORE AI TEST PLATFORM</div>
+      <p>NLP-based test case creation in plain English. No-code for manual testers, code-support for Selenium engineers. Full CI/CD integration.</p>
+      <div class="use-when">→ Use for: Test creation, execution, management</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">🔧</div>
+      <h3>Testim AI</h3>
+      <div class="role">// SELF-HEALING AUTOMATION</div>
+      <p>AI-powered element identification that survives UI changes. Best-in-class self-healing for Selenium scripts. Reduces maintenance by 80%.</p>
+      <div class="use-when">→ Use for: Selenium automation, flaky test elimination</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">👁️</div>
+      <h3>Applitools Eyes</h3>
+      <div class="role">// VISUAL AI TESTING</div>
+      <p>AI visual regression testing. Detects UI changes humans miss. Root cause analysis built-in. Integrates with Selenium and Playwright.</p>
+      <div class="use-when">→ Use for: UI regression, cross-browser visual tests</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">☁️</div>
+      <h3>Mabl</h3>
+      <div class="role">// LOW-CODE AI AUTOMATION</div>
+      <p>Record-and-replay with AI intelligence. Auto-heals tests, learns app behavior, predicts regressions. SaaS, no infrastructure needed.</p>
+      <div class="use-when">→ Use for: Rapid automation for non-coders on QA team</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">🌐</div>
+      <h3>BrowserStack AI</h3>
+      <div class="role">// CROSS-BROWSER CLOUD</div>
+      <p>Run Selenium tests across 3,000+ real browsers and devices. AI failure analysis tells you exactly why tests failed in each environment.</p>
+      <div class="use-when">→ Use for: Cross-browser, mobile, compatibility testing</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">📋</div>
+      <h3>Zephyr Scale + AI</h3>
+      <div class="role">// TEST MANAGEMENT</div>
+      <p>Jira-native test management with AI coverage reporting. Traceability from requirements → test cases → defects in one dashboard.</p>
+      <div class="use-when">→ Use for: Test management, requirements traceability</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">🤖</div>
+      <h3>Claude / ChatGPT API</h3>
+      <div class="role">// AI TEST WRITING CO-PILOT</div>
+      <p>Use directly for: writing complex test cases, analyzing logs, generating test data, explaining defects, writing API test scripts on demand.</p>
+      <div class="use-when">→ Use for: On-demand AI assistance, document analysis</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">🔄</div>
+      <h3>Healenium</h3>
+      <div class="role">// OPEN SOURCE SELF-HEALING</div>
+      <p>Free Selenium wrapper that automatically heals broken locators using ML. Easy to add to existing Selenium projects. Zero cost.</p>
+      <div class="use-when">→ Use for: Existing Selenium suites needing self-healing</div>
+    </div>
+    <div class="tool-card">
+      <div class="tool-icon">📊</div>
+      <h3>Allure Report + AI</h3>
+      <div class="role">// INTELLIGENT REPORTING</div>
+      <p>Beautiful test execution reports with AI-generated insights, trend analysis, and executive summaries. Integrates with any CI/CD pipeline.</p>
+      <div class="use-when">→ Use for: Reporting, dashboards, stakeholder updates</div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== SETUP GUIDE ========== -->
+<section class="section" id="setup">
+  <div class="sec-title">30-Day <span>Setup</span> Roadmap</div>
+  <div class="sec-sub">// HOW TO IMPLEMENT THIS FRAMEWORK AT TRANE TECHNOLOGIES</div>
+
+  <div class="setup-steps">
+
+    <div class="setup-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h3>Week 1 — Install Testsigma + Connect Jira</h3>
+        <p>Start with Testsigma as your AI testing hub. Connect it to your existing Jira workspace so requirements flow in and defects flow out automatically.</p>
+        <div class="code-block">
+<span class="comment"># Step 1: Sign up at testsigma.com (cloud, no install)</span>
+<span class="comment"># Step 2: Connect Jira integration</span>
+Settings → Integrations → Jira → Enter Jira URL + API token
+<span class="comment"># Step 3: Import your first user story</span>
+Test Cases → Import from Jira → Select sprint backlog
+<span class="comment"># Step 4: Let AI generate test cases</span>
+Click "Generate with AI" → Review → Approve → Done
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h3>Week 1-2 — Add Healenium to Existing Selenium</h3>
+        <p>If you already have a Selenium suite, add Healenium in 15 minutes. Your existing tests immediately get AI self-healing — no rewrite needed.</p>
+        <div class="code-block">
+<span class="comment"># Maven pom.xml — add this dependency:</span>
+&lt;<span class="kw">dependency</span>&gt;
+  &lt;<span class="kw">groupId</span>&gt;com.epam.healenium&lt;/<span class="kw">groupId</span>&gt;
+  &lt;<span class="kw">artifactId</span>&gt;healenium-web&lt;/<span class="kw">artifactId</span>&gt;
+  &lt;<span class="kw">version</span>&gt;3.4.2&lt;/<span class="kw">version</span>&gt;
+&lt;/<span class="kw">dependency</span>&gt;
+
+<span class="comment"># In your test setup — wrap your driver:</span>
+<span class="kw">WebDriver</span> driver = <span class="kw">new</span> ChromeDriver();
+<span class="kw">SelfHealingDriver</span> healingDriver = SelfHealingDriver.create(driver);
+<span class="comment"># That's it — Healenium now auto-fixes broken locators</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h3>Week 2 — Set Up AI Prompting Workflow for Test Cases</h3>
+        <p>Train your QA team to use Claude or ChatGPT effectively for test case generation. Create reusable prompt templates for Trane-specific testing.</p>
+        <div class="code-block">
+<span class="comment">## TRANE TEAM PROMPT TEMPLATE — Test Case Generation:</span>
+
+You are a Senior QA Engineer for Trane Technologies (HVAC systems).
+Write detailed test cases for the following user story:
+
+<span class="str">[PASTE USER STORY HERE]</span>
+
+Include:
+- Positive test cases (happy path)
+- Negative test cases (invalid inputs, edge cases)
+- Boundary value analysis
+- Preconditions and test data
+- Expected results in measurable terms
+Format as: Test Case ID | Title | Steps | Expected Result
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h3>Week 3 — Connect CI/CD Pipeline</h3>
+        <p>Integrate your test suite with Jenkins or GitHub Actions so AI tests run automatically on every code push. Set up Slack alerts for failures.</p>
+        <div class="code-block">
+<span class="comment"># GitHub Actions — .github/workflows/ai-tests.yml</span>
+<span class="kw">name</span>: AI-Powered Test Suite
+<span class="kw">on</span>: [push, pull_request]
+<span class="kw">jobs</span>:
+  test:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">steps</span>:
+      - uses: actions/checkout@v3
+      - <span class="kw">name</span>: Run Selenium + Healenium Tests
+        <span class="kw">run</span>: mvn test -Dsurefire.failIfNoSpecifiedTests=false
+      - <span class="kw">name</span>: Generate Allure Report
+        <span class="kw">run</span>: mvn allure:report
+      - <span class="kw">name</span>: Notify Slack on Failure
+        <span class="kw">if</span>: failure()
+        uses: slackapi/slack-github-action@v1
+        </div>
+      </div>
+    </div>
+
+    <div class="setup-step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <h3>Week 4 — Team Training & Prompt Library</h3>
+        <p>Run a half-day workshop with the QA team. Build a shared prompt library in Confluence. Establish AI review checkpoints in your test process.</p>
+        <div class="code-block">
+<span class="comment">## TRAINING AGENDA (4 hours):</span>
+Hour 1: AI tool overview + live demo (Testsigma + Claude)
+Hour 2: Hands-on: Generate test cases from real sprint stories
+Hour 3: Selenium + Healenium: Add self-healing to existing suite
+Hour 4: Defect analysis with AI — paste logs, get root cause
+
+<span class="comment">## CONFLUENCE PAGE STRUCTURE:</span>
+QA AI Toolkit/
+├── Prompt Templates (30+ tested prompts)
+├── Tool Credentials & Access
+├── Best Practices & Guardrails
+└── Sprint AI Test Review Checklist
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ========== ROI ========== -->
+<section class="section" id="roi">
+  <div class="sec-title">Expected <span>ROI</span> & Metrics</div>
+  <div class="sec-sub">// WHAT YOUR TEAM GAINS IN 90 DAYS</div>
+
+  <div class="roi-grid">
+    <div class="roi-card">
+      <div class="roi-num">70%</div>
+      <div class="roi-label">Reduction in test case writing time</div>
+    </div>
+    <div class="roi-card">
+      <div class="roi-num">80%</div>
+      <div class="roi-label">Fewer flaky Selenium failures</div>
+    </div>
+    <div class="roi-card">
+      <div class="roi-num">3×</div>
+      <div class="roi-label">Faster regression cycle completion</div>
+    </div>
+    <div class="roi-card">
+      <div class="roi-num">40%</div>
+      <div class="roi-label">More requirement coverage detected</div>
+    </div>
+  </div>
+
+  <div class="detail-grid" style="max-width:800px;">
+    <div class="detail-block">
+      <h4>Metrics to Track (Sprint 1 → Sprint 6)</h4>
+      <ul>
+        <li>Test case creation time (hours per story point)</li>
+        <li>Defect detection rate (bugs found in QA vs Production)</li>
+        <li>Selenium script failure rate (target: &lt;5% flaky)</li>
+        <li>Requirements coverage % per sprint</li>
+        <li>Time from story approval to test ready</li>
+        <li>Manual tester capacity freed for exploratory testing</li>
+      </ul>
+    </div>
+    <div class="detail-block">
+      <h4>Quick Wins (Day 1-15)</h4>
+      <ul>
+        <li>First AI-generated test case reviewed in &lt;1 hour</li>
+        <li>Healenium stops 90% of locator-related failures immediately</li>
+        <li>Log paste → root cause in under 60 seconds</li>
+        <li>New team member test-ready in 1 day vs 1 week</li>
+        <li>Defect report written by AI in 30 seconds flat</li>
+        <li>Sprint test coverage visible on Day 1</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <span>TRANE TECHNOLOGIES — QA ENGINEERING // AI TESTING FRAMEWORK v1.0</span>
+  <span>CONFIDENTIAL — INTERNAL USE ONLY</span>
+</footer>
+
+<script>
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toggleStage(card) {
+  const wasExpanded = card.classList.contains('expanded');
+  document.querySelectorAll('.stage-card').forEach(c => c.classList.remove('expanded'));
+  if (!wasExpanded) card.classList.add('expanded');
+}
+</script>
+</body>
+</html>
